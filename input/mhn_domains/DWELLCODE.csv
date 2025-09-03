@@ -1,0 +1,7 @@
+Code,Description
+0,0 - Stop allowed
+1,1 - No stopping (#)
+2,2 - Alighting only (>)
+3,3 - Boarding only (<)
+4,4 - Boarding and alighting allowed (+)
+5,5 - Dwell time factor (*)

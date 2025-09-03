@@ -1,0 +1,14 @@
+Code,Description
+0,0 - Unassigned
+1,1 - Chicago CBD
+2,2 - Chicago central area
+3,3 - Chicago
+4,4 - Inner-ring suburbs
+5,5 - Chicago urbanized area (IL)
+6,6 - Chicago urbanized area (IN)
+7,7 - Other urbanized area (IL)
+8,8 - Other urbanized area (IN)
+9,9 - Rural CMAP region
+10,10 - Rural Lake County (IN)
+11,11 - External area
+99,99 - Point of entry

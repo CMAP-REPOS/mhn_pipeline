@@ -1,0 +1,10 @@
+Code,Description
+0,0 - N/A
+1,1 - Arterial
+2,2 - Freeway
+3,3 - Arterial-Freeway Ramp
+4,4 - Expressway
+5,5 - Freeway-Freeway Ramp
+6,6 - Centroid Connector
+7,7 - Toll Plaza
+8,8 - Metered Ramp
