@@ -1,0 +1,4 @@
+PROJECT CODING:
+10-06-0010, 10046-10045-1 - set NEW_MODES to 0 (or else it will overwrite the existing mode + truckres)
+
+double check NEW_MODES coding
