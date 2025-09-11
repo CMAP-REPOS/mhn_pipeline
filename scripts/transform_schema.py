@@ -66,9 +66,9 @@ for code in code_dict:
 
 # add node domain
 name = "NODE"
-description = "Valid highway node IDs (<29999)"
+description = "Valid highway node IDs (1 - 29999)"
 arcpy.management.CreateDomain(output_GDB, name, description, "LONG", "RANGE", "DUPLICATE", "DEFAULT")
-arcpy.management.SetValueForRangeDomain(output_GDB, name, 0, 29999)
+arcpy.management.SetValueForRangeDomain(output_GDB, name, 1, 29999)
 
 # add subzone domain
 name = "SUBZONE"
@@ -225,7 +225,7 @@ for field in schema_list:
 
     field_name = field[0]
 
-    if field_name not in ["SRA"]:
+    if field_name not in ["ANODE", "BNODE", "SRA"]:
         arcpy.management.AlterField(name, field_name, field_is_nullable = "NON_NULLABLE")
 
 input_links = os.path.join(input_mhn, "hwynet", name)
@@ -792,6 +792,77 @@ with arcpy.da.SearchCursor(input_table, fields) as scursor:
 
         for row in scursor:
             icursor.insertRow(row)
+
+# ADD OVERRIDES -----------------------------------------------------------------------------------
+
+print("ADDING OVERRIDES. MAKE SURE THAT YOU ARE OKAY WITH THESE.")
+
+# get rid of duplicates in hwyproj
+arcpy.management.MakeFeatureLayer("hwyproj", "hwyproj_layer")
+
+arcpy.management.SelectLayerByAttribute("hwyproj_layer", "NEW_SELECTION", "TIPID IN ('10-03-0008', '10-00-0115') And NOTES IS NULL")
+arcpy.management.DeleteRows("hwyproj_layer")
+
+# prevent problems with arcs
+arcpy.management.MakeFeatureLayer("hwynet_arc", "hwylink_layer")
+
+# zero out values on skeleton links
+where_clause = "ABB IN ('18464-23761-0', '23757-16052-0', '23758-17883-0', '15987-23759-0', '23759-23760-0', '23761-23758-0', '17883-23757-0', '23760-18464-0')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "TYPE1", "'0'")
+arcpy.management.CalculateField("hwylink_layer", "THRULANES1", "0")
+
+where_clause = "ABB IN ('17323-9723-0', '9723-9711-0')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "MODES", "'0'")
+
+where_clause = "ABB IN ('16875-16883-0', '16881-16880-0', '15128-17802-0', '17802-20032-0')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "VCLEARANCE", "0")
+
+# zero out parkres2 for link where directions = 1
+where_clause = "ABB IN ('14791-14886-1')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "PARKRES2", "'-'")
+
+# zero out '2' values for links where directions = 2
+where_clause = "ABB IN ('17694-17686-1')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "TYPE2", "'0'")
+
+where_clause = '''ABB IN ('11419-11610-1', '8548-8549-1', '13304-13294-1', '11611-11610-1', 
+'13631-13630-1', '13113-13117-1', '23531-14739-1')'''
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "AMPM2", "'0'")
+
+where_clause = "ABB IN ('15280-15131-1', '12481-12315-1', '17252-13962-1', '13962-5918-1', '6460-17252-1')"
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "THRULANES2", "0")
+
+where_clause = '''ABB IN ('17761-17758-1', '17761-17594-1', '17795-17761-1', '18120-18118-1', 
+'17795-17801-1', '18065-18066-1', '18053-18083-1', '18083-18078-1', '18083-18099-1', '18119-18215-1', 
+'18026-17923-1', '18117-18120-1', '18100-24136-1', '18117-24136-1', '24136-18099-1')'''
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "THRULANEWIDTH2", "0")
+
+where_clause = '''ABB IN ('15178-15179-1', '15207-15208-1', '16278-16285-1', '16284-16285-1', 
+'16300-16337-1', '16302-16330-1', '11902-12055-1', '15060-15179-1', '15144-15145-1', '15144-15143-1',
+'21268-15974-1', '16933-16921-1', '18194-18200-1', '18201-14804-1', '15145-15178-1', '15179-15207-1', 
+'15208-18252-1', '11542-18351-1', '12185-12342-1', '12342-12463-1', '12055-18375-1')'''
+arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("hwylink_layer", "PARKLANES2", "0")
+
+# change project coding to not wipe out truckres
+
+arcpy.management.MakeTableView("hwyproj_coding", "coding_view")
+
+where_clause = "TIPID = '10-06-0010' AND ABB = '10046-10045-1'"
+arcpy.management.SelectLayerByAttribute("coding_view", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("coding_view", "NEW_MODES", "'0'")
+
+where_clause = "TIPID = '99-99-0032' AND ABB = '16302-16284-1'"
+arcpy.management.SelectLayerByAttribute("coding_view", "NEW_SELECTION", where_clause)
+arcpy.management.CalculateField("coding_view", "NEW_MODES", "'0'")
 
 # ADD RELATIONSHIP CLASSES ------------------------------------------------------------------------
 
