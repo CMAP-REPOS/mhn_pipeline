@@ -1,1 +1,3 @@
 Look over project coding when ACTION_CODE = '1', NEW_THRULANES1 = 1, and TOD = '37'. I assume that this means to add a parking restriction but I am not sure. 
+
+5 rows are lost from the project coding table where the replace link does not exist.
