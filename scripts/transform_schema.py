@@ -557,13 +557,6 @@ arcpy.management.CreateDomain(output_GDB, name, description, "TEXT", "CODED", "D
 for code in code_dict:
     arcpy.management.AddCodedValueToDomain(output_GDB, name, code, code_dict[code])
 
-name = "CARDINAL"
-description = "Cardinal directions"
-code_dict = made_code_dict(name)
-arcpy.management.CreateDomain(output_GDB, name, description, "TEXT", "CODED", "DEFAULT", "DEFAULT")
-for code in code_dict:
-    arcpy.management.AddCodedValueToDomain(output_GDB, name, code, code_dict[code])
-
 name = "HOUR"
 description = "Hours since midnight"
 code_dict = made_code_dict(name)
@@ -613,16 +606,6 @@ schema_list = [[row["NAME"],
 
 arcpy.management.AddFields(name,
                            schema_list)
-
-input_fc = os.path.join(input_mhn, "hwynet", name)
-fields = ["SHAPE@", "TRANSIT_LINE", "DESCRIPTION", "MODE", "VEHICLE_TYPE", "HEADWAY", "SPEED",
-          "ROUTE_ID", "LONGNAME", "DIRECTION", "TERMINAL", "START", "STARTHOUR", "AM_SHARE", "FEEDLINE"]
-
-with arcpy.da.SearchCursor(input_fc, fields) as scursor:
-    with arcpy.da.InsertCursor(name, fields) as icursor:
-
-        for row in scursor:
-            icursor.insertRow(row)
 
 # ADD BUS CURRENT ---------------------------------------------------------------------------------
 
@@ -689,37 +672,37 @@ schema_list = [[row["NAME"],
 arcpy.management.AddFields(name,
                            schema_list)
 
-input_table = os.path.join(input_mhn, name)
-fields = ["TRANSIT_LINE", "ITIN_ORDER", "ITIN_A", "ITIN_B",
-          "ABB", "LAYOVER", "DWELL_CODE", "ZONE_FARE",
-          "LINE_SERV_TIME", "TTF", "LINK_STOPS", "IMPUTED", 
-          "DEP_TIME", "ARR_TIME", "F_MEAS", "T_MEAS"]
+# # input_table = os.path.join(input_mhn, name)
+# # fields = ["TRANSIT_LINE", "ITIN_ORDER", "ITIN_A", "ITIN_B",
+# #           "ABB", "LAYOVER", "DWELL_CODE", "ZONE_FARE",
+# #           "LINE_SERV_TIME", "TTF", "LINK_STOPS", "IMPUTED", 
+# #           "DEP_TIME", "ARR_TIME", "F_MEAS", "T_MEAS"]
 
-start_time = time.time()
+# # start_time = time.time()
 
-with arcpy.da.SearchCursor(input_table, fields) as scursor:
-    with arcpy.da.InsertCursor(name, fields) as icursor:
+# # with arcpy.da.SearchCursor(input_table, fields) as scursor:
+# #     with arcpy.da.InsertCursor(name, fields) as icursor:
 
-        for row in scursor:
+# #         for row in scursor:
             
-            ttf = row[9]
+# #             ttf = row[9]
 
-            if ttf == "0":
-                ttf = "1"
+# #             if ttf == "0":
+# #                 ttf = "1"
 
-            icursor.insertRow([
-                row[0], row[1], row[2], row[3],
-                row[4], row[5], row[6], row[7],
-                row[8], ttf, row[10], row[11],
-                row[12], row[13], row[14], row[15]
-            ])
+# #             icursor.insertRow([
+# #                 row[0], row[1], row[2], row[3],
+# #                 row[4], row[5], row[6], row[7],
+# #                 row[8], ttf, row[10], row[11],
+# #                 row[12], row[13], row[14], row[15]
+# #             ])
 
-end_time = time.time()
-total_time = round(end_time - start_time)
-minutes = math.floor(total_time / 60)
-seconds = total_time % 60
+# # end_time = time.time()
+# # total_time = round(end_time - start_time)
+# # minutes = math.floor(total_time / 60)
+# # seconds = total_time % 60
 
-print(f"{minutes}m {seconds}s to loop.")
+# # print(f"{minutes}m {seconds}s to loop.")
 
 # ADD BUS CURRENT ITIN ----------------------------------------------------------------------------
 
@@ -797,60 +780,54 @@ with arcpy.da.SearchCursor(input_table, fields) as scursor:
 
 print("ADDING OVERRIDES. MAKE SURE THAT YOU ARE OKAY WITH THESE.")
 
-# get rid of duplicates in hwyproj
-arcpy.management.MakeFeatureLayer("hwyproj", "hwyproj_layer")
+# # prevent problems with arcs
+# arcpy.management.MakeFeatureLayer("hwynet_arc", "hwylink_layer")
 
-arcpy.management.SelectLayerByAttribute("hwyproj_layer", "NEW_SELECTION", "TIPID IN ('10-03-0008', '10-00-0115') And NOTES IS NULL")
-arcpy.management.DeleteRows("hwyproj_layer")
+# # zero out values on skeleton links
+# where_clause = "ABB IN ('18464-23761-0', '23757-16052-0', '23758-17883-0', '15987-23759-0', '23759-23760-0', '23761-23758-0', '17883-23757-0', '23760-18464-0')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "TYPE1", "'0'")
+# arcpy.management.CalculateField("hwylink_layer", "THRULANES1", "0")
 
-# prevent problems with arcs
-arcpy.management.MakeFeatureLayer("hwynet_arc", "hwylink_layer")
+# where_clause = "ABB IN ('17323-9723-0', '9723-9711-0')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "MODES", "'0'")
 
-# zero out values on skeleton links
-where_clause = "ABB IN ('18464-23761-0', '23757-16052-0', '23758-17883-0', '15987-23759-0', '23759-23760-0', '23761-23758-0', '17883-23757-0', '23760-18464-0')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "TYPE1", "'0'")
-arcpy.management.CalculateField("hwylink_layer", "THRULANES1", "0")
+# where_clause = "ABB IN ('16875-16883-0', '16881-16880-0', '15128-17802-0', '17802-20032-0')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "VCLEARANCE", "0")
 
-where_clause = "ABB IN ('17323-9723-0', '9723-9711-0')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "MODES", "'0'")
+# # zero out parkres2 for link where directions = 1
+# where_clause = "ABB IN ('14791-14886-1')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "PARKRES2", "'-'")
 
-where_clause = "ABB IN ('16875-16883-0', '16881-16880-0', '15128-17802-0', '17802-20032-0')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "VCLEARANCE", "0")
+# # zero out '2' values for links where directions = 2
+# where_clause = "ABB IN ('17694-17686-1')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "TYPE2", "'0'")
 
-# zero out parkres2 for link where directions = 1
-where_clause = "ABB IN ('14791-14886-1')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "PARKRES2", "'-'")
+# where_clause = '''ABB IN ('11419-11610-1', '8548-8549-1', '13304-13294-1', '11611-11610-1', 
+# '13631-13630-1', '13113-13117-1', '23531-14739-1')'''
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "AMPM2", "'0'")
 
-# zero out '2' values for links where directions = 2
-where_clause = "ABB IN ('17694-17686-1')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "TYPE2", "'0'")
+# where_clause = "ABB IN ('15280-15131-1', '12481-12315-1', '17252-13962-1', '13962-5918-1', '6460-17252-1')"
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "THRULANES2", "0")
 
-where_clause = '''ABB IN ('11419-11610-1', '8548-8549-1', '13304-13294-1', '11611-11610-1', 
-'13631-13630-1', '13113-13117-1', '23531-14739-1')'''
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "AMPM2", "'0'")
+# where_clause = '''ABB IN ('17761-17758-1', '17761-17594-1', '17795-17761-1', '18120-18118-1', 
+# '17795-17801-1', '18065-18066-1', '18053-18083-1', '18083-18078-1', '18083-18099-1', '18119-18215-1', 
+# '18026-17923-1', '18117-18120-1', '18100-24136-1', '18117-24136-1', '24136-18099-1')'''
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "THRULANEWIDTH2", "0")
 
-where_clause = "ABB IN ('15280-15131-1', '12481-12315-1', '17252-13962-1', '13962-5918-1', '6460-17252-1')"
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "THRULANES2", "0")
-
-where_clause = '''ABB IN ('17761-17758-1', '17761-17594-1', '17795-17761-1', '18120-18118-1', 
-'17795-17801-1', '18065-18066-1', '18053-18083-1', '18083-18078-1', '18083-18099-1', '18119-18215-1', 
-'18026-17923-1', '18117-18120-1', '18100-24136-1', '18117-24136-1', '24136-18099-1')'''
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "THRULANEWIDTH2", "0")
-
-where_clause = '''ABB IN ('15178-15179-1', '15207-15208-1', '16278-16285-1', '16284-16285-1', 
-'16300-16337-1', '16302-16330-1', '11902-12055-1', '15060-15179-1', '15144-15145-1', '15144-15143-1',
-'21268-15974-1', '16933-16921-1', '18194-18200-1', '18201-14804-1', '15145-15178-1', '15179-15207-1', 
-'15208-18252-1', '11542-18351-1', '12185-12342-1', '12342-12463-1', '12055-18375-1')'''
-arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
-arcpy.management.CalculateField("hwylink_layer", "PARKLANES2", "0")
+# where_clause = '''ABB IN ('15178-15179-1', '15207-15208-1', '16278-16285-1', '16284-16285-1', 
+# '16300-16337-1', '16302-16330-1', '11902-12055-1', '15060-15179-1', '15144-15145-1', '15144-15143-1',
+# '21268-15974-1', '16933-16921-1', '18194-18200-1', '18201-14804-1', '15145-15178-1', '15179-15207-1', 
+# '15208-18252-1', '11542-18351-1', '12185-12342-1', '12342-12463-1', '12055-18375-1')'''
+# arcpy.management.SelectLayerByAttribute("hwylink_layer", "NEW_SELECTION", where_clause)
+# arcpy.management.CalculateField("hwylink_layer", "PARKLANES2", "0")
 
 # change project coding to not wipe out truckres
 
