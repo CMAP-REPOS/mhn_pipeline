@@ -629,6 +629,32 @@ schema_list = [[row["NAME"],
 arcpy.management.AddFields(name,
                            schema_list)
 
+input_fc = os.path.join(input_mhn, "hwynet", name + "_2024")
+
+s_fields = ["SHAPE@", "TRANSIT_LINE", "MODE", "VEHICLE_TYPE",
+            "HEADWAY", "SPEED", "DIRECTION", "START", 
+            "STARTHOUR", "FEEDLINE", "LONGNAME"]
+
+i_fields = ["SHAPE@", "TRANSIT_LINE", "MODE", "VEHICLE_TYPE",
+            "HEADWAY", "SPEED", "DIRECTION", "START",
+            "STARTHOUR", "FEEDLINE", "ROUTE_ID", "DESCRIPTION"]
+
+with arcpy.da.SearchCursor(input_fc, s_fields) as scursor:
+    with arcpy.da.InsertCursor(name, i_fields) as icursor:
+
+        for row in scursor:
+
+            longname = row[10]
+            route_id = longname.split()[0].split("-")[0]
+            desc = route_id + " " + longname.split(maxsplit = 2)[2]
+            desc = desc[0:50]
+            
+            insert_row = [row[0], row[1], row[2], row[3], 
+                          row[4], row[5], row[6], row[7],
+                          row[8], row[9], route_id, desc]
+            
+            icursor.insertRow(insert_row)
+
 # ADD BUS FUTURE ----------------------------------------------------------------------------------
 
 print("Creating bus future feature class...")
@@ -650,6 +676,18 @@ schema_list = [[row["NAME"],
 
 arcpy.management.AddFields(name,
                            schema_list)
+
+input_fc = os.path.join(input_mhn, "hwynet", name + "_2024")
+
+fields = ["SHAPE@", "TRANSIT_LINE", "DESCRIPTION", "MODE",
+          "VEHICLE_TYPE", "HEADWAY", "SPEED", "SCENARIO",
+          "REPLACE", "REROUTE", "TOD", "NOTES"]
+
+with arcpy.da.SearchCursor(input_fc, fields) as scursor:
+    with arcpy.da.InsertCursor(name, fields) as icursor:
+        
+        for row in scursor:
+            icursor.insertRow(row)
 
 # ADD BUS BASE ITIN -------------------------------------------------------------------------------
 
@@ -725,6 +763,19 @@ schema_list = [[row["NAME"],
 arcpy.management.AddFields(name,
                            schema_list)
 
+input_table = os.path.join(input_mhn, name + "_2024")
+
+fields = ["TRANSIT_LINE", "ITIN_ORDER", "ITIN_A", "ITIN_B",
+          "ABB", "LAYOVER", "DWELL_CODE", "ZONE_FARE",
+          "LINE_SERV_TIME", "TTF", "LINK_STOPS", "IMPUTED", 
+          "DEP_TIME", "ARR_TIME", "F_MEAS", "T_MEAS"]
+
+with arcpy.da.SearchCursor(input_table, fields) as scursor:
+    with arcpy.da.InsertCursor(name, fields) as icursor:
+
+        for row in scursor:
+            icursor.insertRow(row)
+
 # ADD BUS FUTURE ITIN -----------------------------------------------------------------------------
 
 print("Creating bus future itinerary table...")
@@ -745,6 +796,18 @@ schema_list = [[row["NAME"],
 
 arcpy.management.AddFields(name,
                            schema_list)
+
+input_table = os.path.join(input_mhn, name + "_2024")
+
+fields = ["TRANSIT_LINE", "ITIN_ORDER", "ITIN_A", "ITIN_B",
+          "ABB", "LAYOVER", "DWELL_CODE", "ZONE_FARE",
+          "LINE_SERV_TIME", "TTF", "F_MEAS", "T_MEAS"]
+
+with arcpy.da.SearchCursor(input_table, fields) as scursor:
+    with arcpy.da.InsertCursor(name, fields) as icursor:
+
+        for row in scursor:
+            icursor.insertRow(row)
 
 # ADD PARKNRIDE TABLE -----------------------------------------------------------------------------
 
